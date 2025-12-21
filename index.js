@@ -16,21 +16,21 @@ const port = 3000;
 
 // middleware
 app.use(
-  // cors({
-  //   // origin: [process.env.CLIENT_DOMAIN],
-  //   origin: "https://velvety-malabi-6501ea.netlify.app",
-  //   credentials: true,
-  //   optionSuccessStatus: 200,
-  // })
   cors({
-    origin: [
-      "https://velvety-malabi-6501ea.netlify.app", // আপনার লাইভ সাইট
-      "http://localhost:5173", // আপনার লোকালহোস্ট (Vite default)
-      "http://localhost:5174", // অনেক সময় পোর্ট পরিবর্তন হলে কাজে দেবে
-    ],
+    // origin: [process.env.CLIENT_DOMAIN],
+    origin: ["http://localhost:5173"],
     credentials: true,
     optionSuccessStatus: 200,
   })
+  // cors({
+  //   origin: [
+  //     "https://velvety-malabi-6501ea.netlify.app", // আপনার লাইভ সাইট
+  //     "http://localhost:5173", // আপনার লোকালহোস্ট (Vite default)
+  //     "http://localhost:5174", // অনেক সময় পোর্ট পরিবর্তন হলে কাজে দেবে
+  //   ],
+  //   credentials: true,
+  //   optionSuccessStatus: 200,
+  // })
 );
 app.use(express.json());
 
@@ -112,9 +112,21 @@ async function run() {
     });
 
     // get 6 data on home
+    // app.get("/six-card", async (req, res) => {
+    //   try {
+    //     const result = await gramentsCollection.find().limit(6).toArray();
+
+    //     res.send(result);
+    //   } catch (error) {
+    //     res.status(500).send({ message: "Failed to fetch products" });
+    //   }
+    // });
+
+    // এটি হবে রিকোয়ারমেন্ট অনুযায়ী সঠিক এপিআই:
     app.get("/six-card", async (req, res) => {
       try {
-        const result = await gramentsCollection.find().limit(6).toArray();
+        const query = { showOnHome: true }; // শুধু সেগুলোই আসবে যেগুলোতে অ্যাডমিন টিক দিয়েছে
+        const result = await gramentsCollection.find(query).limit(6).toArray();
 
         res.send(result);
       } catch (error) {
@@ -237,12 +249,11 @@ async function run() {
           orderId: result.insertedId,
         });
       }
-      res.send(
-        res.send({
-          transactionId: session.payment_intent,
-          orderId: order._id,
-        })
-      );
+
+      res.send({
+        transactionId: session.payment_intent,
+        orderId: order._id,
+      });
     });
 
     // get all orders for a customer by email
@@ -399,30 +410,47 @@ async function run() {
     });
 
     // approve order
-    // app.patch("/orders/approve/:id", async (req, res) => {
-    //   const id = req.params.id;
+    app.get("/approved-orders-list", async (req, res) => {
+      const result = await ordersCollection
+        .find({ status: "Approved" })
+        .toArray();
+      res.send(result);
+    });
 
-    //   const result = await ordersCollection.updateOne(
-    //     { _id: new ObjectId(id) },
-    //     {
-    //       $set: {
-    //         status: "Approved",
-    //         approvedAt: new Date(),
-    //       },
-    //     }
-    //   );
+    // backend code
+    app.patch("/orders/approve/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: { status: "Approved", approvedAt: new Date() },
+      };
+      const result = await ordersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
-    //   res.send(result);
-    // });
-    app.get("/approved-orders", async (req, res) => {
-      try {
-        const orders = await ordersCollection
-          .find({ status: "Approved" })
-          .toArray();
-        res.send(orders);
-      } catch (err) {
-        res.status(500).send({ message: "Server error" });
-      }
+    // ৩. ট্র্যাকিং আপডেট করার রাউট (Add Tracking বাটনের জন্য)
+    app.patch("/orders/update-tracking/:id", async (req, res) => {
+      const id = req.params.id;
+      const trackingInfo = req.body; // ফ্রন্টএন্ড থেকে আসা status, location, note
+
+      const query = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          currentStatus: trackingInfo.status, // উদা: Cutting Completed
+          lastLocation: trackingInfo.location,
+          lastUpdated: new Date(),
+        },
+        // ঐচ্ছিক: একটি array-তে হিস্ট্রি সেভ করে রাখতে পারেন
+        $push: {
+          trackingHistory: {
+            ...trackingInfo,
+            time: new Date(),
+          },
+        },
+      };
+
+      const result = await ordersCollection.updateOne(query, updateDoc);
+      res.send(result);
     });
 
     // single trackin order

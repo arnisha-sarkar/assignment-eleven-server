@@ -22,15 +22,6 @@ app.use(
     credentials: true,
     optionSuccessStatus: 200,
   })
-  // cors({
-  //   origin: [
-  //     "https://velvety-malabi-6501ea.netlify.app", // আপনার লাইভ সাইট
-  //     "http://localhost:5173", // আপনার লোকালহোস্ট (Vite default)
-  //     "http://localhost:5174", // অনেক সময় পোর্ট পরিবর্তন হলে কাজে দেবে
-  //   ],
-  //   credentials: true,
-  //   optionSuccessStatus: 200,
-  // })
 );
 app.use(express.json());
 
@@ -122,10 +113,9 @@ async function run() {
     //   }
     // });
 
-    // এটি হবে রিকোয়ারমেন্ট অনুযায়ী সঠিক এপিআই:
     app.get("/six-card", async (req, res) => {
       try {
-        const query = { showOnHome: true }; // শুধু সেগুলোই আসবে যেগুলোতে অ্যাডমিন টিক দিয়েছে
+        const query = { showOnHome: true };
         const result = await gramentsCollection.find(query).limit(6).toArray();
 
         res.send(result);
@@ -428,19 +418,18 @@ async function run() {
       res.send(result);
     });
 
-    // ৩. ট্র্যাকিং আপডেট করার রাউট (Add Tracking বাটনের জন্য)
     app.patch("/orders/update-tracking/:id", async (req, res) => {
       const id = req.params.id;
-      const trackingInfo = req.body; // ফ্রন্টএন্ড থেকে আসা status, location, note
+      const trackingInfo = req.body;
 
       const query = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          currentStatus: trackingInfo.status, // উদা: Cutting Completed
+          currentStatus: trackingInfo.status,
           lastLocation: trackingInfo.location,
           lastUpdated: new Date(),
         },
-        // ঐচ্ছিক: একটি array-তে হিস্ট্রি সেভ করে রাখতে পারেন
+
         $push: {
           trackingHistory: {
             ...trackingInfo,

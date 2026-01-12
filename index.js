@@ -22,7 +22,7 @@ app.use(
       "https://harmonious-brioche-3f4d22.netlify.app",
     ],
     credentials: true,
-    optionSuccessStatus: 200,
+    optionsSuccessStatus: 200,
   })
 );
 app.use(express.json());

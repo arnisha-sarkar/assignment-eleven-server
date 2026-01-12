@@ -17,7 +17,10 @@ const port = 3000;
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://amazing-fox-331476.netlify.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://harmonious-brioche-3f4d22.netlify.app",
+    ],
     credentials: true,
     optionSuccessStatus: 200,
   })

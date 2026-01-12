@@ -17,8 +17,7 @@ const port = 3000;
 // middleware
 app.use(
   cors({
-    // origin: [process.env.CLIENT_DOMAIN],
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173", "https://amazing-fox-331476.netlify.app"],
     credentials: true,
     optionSuccessStatus: 200,
   })
@@ -71,28 +70,6 @@ async function run() {
       const result = await gramentsCollection.find().toArray();
       res.send(result);
     });
-    // app.get("/all-product", async (req, res) => {
-    //   try {
-    //     const page = parseInt(req.query.page) || 1;
-    //     const limit = parseInt(req.query.limit) || 6; // ✅ 2 products per page
-    //     const skip = (page - 1) * limit;
-
-    //     const products = await gramentsCollection
-    //       .find()
-    //       .skip(skip)
-    //       .limit(limit)
-    //       .toArray();
-
-    //     const totalProducts = await gramentsCollection.countDocuments();
-
-    //     res.send({
-    //       products,
-    //       totalProducts,
-    //     });
-    //   } catch (error) {
-    //     res.status(500).send({ message: "Server error" });
-    //   }
-    // });
 
     app.get("/all-product/:id", async (req, res) => {
       const id = req.params.id;
@@ -490,6 +467,14 @@ app.get("/", (req, res) => {
   res.send("server is runnin fine!");
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server is running on port ${port}`);
+// });
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+module.exports = app;
